@@ -1,0 +1,118 @@
+syntax = "proto3";
+
+package Trade;
+
+//事件
+enum EVEN {
+    Kong = 0;
+    Trade = 1; //成交
+    Kline = 2; //K线
+    Depth = 3; //深度
+    Ticker = 4; //行情
+    Five = 5; //5%深度
+    MTicker = 6; //精简行情(price,range)
+    ULogin = 99; //登录
+    UOrder = 100; //个人订单
+    UTrade = 101; //个人成交
+}
+
+enum KlineT {
+    Min1 = 0;
+    Min5 = 1;
+    Min15 = 2;
+    Min30 = 3;
+    Hour1 = 4;
+    Hour4 = 5;
+    Day1 = 6;
+    Day5 = 7;
+    Week1 = 8;
+    Mon1 = 9;
+}
+
+//K线（API）
+message KlineList {
+    repeated KlineBasicInfo Kline = 1;
+}
+
+//深度（API）
+message DepthList {
+    // @inject_tag: json:"bids"
+    repeated DepthBasicInfo Buy = 2; //买单深度
+    // @inject_tag: json:"asks"
+    repeated DepthBasicInfo Sell = 3; // 卖单深度
+}
+
+//单交易对行情（API）
+message TickerData {
+    string Price = 2; //最新成交价
+    string High = 4; //24小时最高价
+    string Low = 5; //24小时最低价
+    string Amount = 6; //24小时成交数量
+    string Money = 7; //24小时成交额
+    string Range = 8; //涨跌幅
+    string Buy = 9; //买一
+    string Sell = 10; //卖一
+}
+
+//单交易对精简行情
+message MiniTickerData {
+    string Price = 2; //最新成交价
+    string Money = 7; //24小时成交额
+    string Range = 8; //涨跌幅
+}
+
+//深度单元信息
+message DepthBasicInfo {
+    // @inject_tag: json:"a"
+    string Amount = 2; //数量
+    //@inject_tag: json:"p"
+    string Price = 3; //价格
+}
+
+//交易单元信息
+message TradeBasicInfo {
+    int64 TimeUnix = 1; //unix时间戳 秒级别
+    string Amount = 2; //数量
+    string Price = 3; //价格
+    string Type = 4; //交易类型 buy or sell
+    int64 TradeId = 5; //成交ID
+}
+
+//K线基本信息
+message KlineBasicInfo {
+    string T = 2; //K线时间线类型 1min 5min 30min 4hour 1day 1week 1month...
+    int64 TimeUnix = 3; //K线开始unix时间戳 秒级别
+    string Amount = 4; //成交数量
+    string Open = 5; //开
+    string High = 6; //高
+    string Low = 7; //低
+    string Close = 8; //收
+}
+
+//用户订单信息（API）
+message OrderInfoUser {
+    string TabId = 2; //流水ID
+    string UserId = 3; //订单用户ID
+    int32 Side = 4; //买卖类型
+    string Amount = 7; //下单数量
+    string Price = 8; //下单价格
+    string Surplus = 9; //剩余数量
+    int32 Status = 10; //当前状态
+    int64 TimeUnix = 11; //订单创建时间
+}
+
+//用户交易单元信息
+message TradeBasicInfoUser {
+    string TabId = 2; //流水ID
+    string UserId = 3; //订单用户ID
+    int32 Match = 4; //self.自成交 other.他人
+    TradeBasicInfo Trade = 5;
+    string Fee = 6; //手续费数量
+    string FeeCoin = 7; //手续费币种
+    int32 ExecType = 8; // t || m
+}
+
+//5%深度
+message FiveDepth {
+    string Five = 1;
+}

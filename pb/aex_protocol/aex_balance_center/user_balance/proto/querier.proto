@@ -1,0 +1,51 @@
+syntax = "proto3";
+package userBalance;
+option go_package = ".;userBalance";
+
+import "general.proto";
+import "google/api/annotations.proto";
+
+// UserBalance 查询服务
+// 提供各种查询接口
+service UserBalanceQueryService {
+    // 查询:
+    // 1. 多种资产类型
+    // 2. 多种币
+    // 资产数据
+    rpc BatchUserAssets(BatchUserAssetsParams) returns (BatchUserAssetsResponse) {
+        option (google.api.http) = {
+            get: "/v1/balance/assets/user/batch"
+        };
+    };
+};
+
+message BatchUserAssetsParams {
+    // 要查询的用户
+    int64 uid = 1;
+
+    // 要查询的币种
+    repeated string coinCodes = 2;
+
+    // 要查询的持币类型
+    repeated HoldingsType types = 3;
+
+    // 如果有 coinCodes 参数，按 coinCodes 参数查询
+    // 否则，当 isTotal = true 时，表示查询所有币种持币
+    bool isTotal = 4;
+}
+
+message BatchUserAssetsResponseData {
+    // 用户持币
+    repeated CoinHoldings coinHoldings = 1;
+}
+
+message BatchUserAssetsResponse {
+    enum Code {
+        Fail = 0;
+        Success = 1;
+    }
+
+    Code statusCode = 1;
+    string desc = 2;
+    BatchUserAssetsResponseData data = 3;
+}

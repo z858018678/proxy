@@ -1,0 +1,309 @@
+syntax = "proto3";
+package userBalance;
+option go_package = ".;userBalance";
+
+// 请求附带的 HttpCallback
+message HttpCallback {
+    // 回调ID，用以记录
+    // 长度不要超过 32
+    string id = 1;
+    // 回调地址
+    string url = 2;
+    // 回调方法，标准 http 请求方法
+    string method = 3;
+    // 请求的 timeout: ms
+    // 5000 ~ 60000
+    int64 timeout = 4;
+    // 如果回调失败，那么会尝试重试，重试次数
+    // >= 0
+    int64 maxRetries = 5;
+    // 重试回调的间隔: ms
+    // 1000 ~ 600000
+    int64 retryInterval = 6;
+}
+
+message KafkaCallback {
+    // 回调ID，用以记录
+    // 长度不要超过 32
+    string id = 1;
+    // 往此 topic 中发送一条消息
+    string topic = 2;
+    // 往此 partition 中发送消息
+    // -1 代表随机分配
+    int64 partition = 3;
+}
+
+// 在 kafka callback 时，发送的消息体 
+message KafkaCallbackMessage {
+    // 回调ID
+    string callbackID = 1;
+    // 请求ID
+    string requestID = 2;
+}
+
+message Callback {
+    enum Type {
+        None = 0;
+        Http = 1;
+        Kafka = 2;
+    }
+    // 回调类型
+    Type type = 1;
+    // 根据回调类型传入回调参数
+    HttpCallback http = 2; 
+    KafkaCallback kafka = 3;
+}
+
+// producer 所有的 kafka topic
+enum KafkaTopic {
+    // 保留字段
+    KafkaTopicNone = 0;
+
+    // 增加持币
+    IncreaseHoldings = 1;
+    IncreaseHoldingsResult = 2;
+
+    // 减少持币
+    DecreaseHoldings = 3;
+    DecreaseHoldingsResult = 4;
+
+    // 移动持币
+    MoveHoldings = 5;
+    MoveHoldingsResult = 6;
+
+    // 变化持币
+    MultiChangeHoldings = 7;
+    MultiChangeHoldingsResult = 8;
+
+    // 管理后台减少持币
+    // 允许扣除为负数
+    DecreaseHoldingsAdmin = 9;
+    DecreaseHoldingsAdminResult = 10;
+}
+
+// 持币类型
+enum HoldingsType {
+    // 保留字段
+    HoldingsTypeNone = 0;
+    // 立即可用资产
+    // 可用来交易的现货资产
+    SpotFree = 1;
+    // 挂单锁仓数量
+    SpotOrderFrozen = 2;
+    // 理财锁仓
+    SpotFinanceFrozen = 3;
+    // otc广告冻结
+    OTCFrozen = 4;
+}
+
+// 持币
+message CoinHoldings {
+    message Holdings {
+        // 持币类型
+        HoldingsType type = 2;
+
+        // 持币数量
+        double holdings = 3;
+    }
+
+    // 币
+    string coinCode = 1;
+
+    repeated Holdings holdings = 2;
+}
+
+// AEX 业务
+message AexBusiness {
+    enum Type {
+        // 默认
+        OPERATE_TYPE_ID = 0;
+        // 提币订单
+        OPERATE_TYPE_ID_DRAW_BALANCE = 100001;
+        // 充值订单
+        OPERATE_TYPE_ID_DEPOSIT_BALANCE = 100002;
+        // BitcnY轉移資金
+        OPERATE_TYPE_ID_AEXCNY_BTCCNY = 100003;
+        // 发红包
+        OPERATE_TYPE_ID_SEND_PACK = 200004;
+        // 抢红包
+        OPERATE_TYPE_ID_GRAD_RED_PACK = 200005;
+        // 活动 - 金蛋獎勵
+        OPERATE_TYPE_ID_ACT_PRIZE_DROP = 200006;
+        // 领利息
+        OPERATE_TYPE_ID_INTEREST = 200022;
+        // 社区 - 打赏
+        OPERATE_TYPE_ID_SNS_ADMIRE = 200023;
+        // 社区 - 收到打赏
+        OPERATE_TYPE_ID_SNS_GET_ADMIRE = 200024;
+        // 保险 - 买综合安全计划
+        OPERATE_TYPE_ID_INSURANCE_BUY_INTEGRATED = 200026;
+        // 保险 - 买特定安全计划
+        OPERATE_TYPE_ID_INSURANCE_BUY_DESIGNATED = 200027;
+        // 保险 - 退综合安全计划
+        OPERATE_TYPE_ID_INSURANCE_RETURN_INTEGRATED = 200028;
+        // 保险 - 退特定安全计划
+        OPERATE_TYPE_ID_INSURANCE_RETURN_DESIGNATED = 200029;
+        // 保险 - 升级计划
+        OPERATE_TYPE_ID_INSURANCE_UPGRADE = 200030;
+        // 合伙人返佣GAT
+        OPERATE_TYPE_ID_PARTNER_REBATE = 200031;
+        // ILO项目瓜分
+        OPERATE_TYPE_ID_ILO = 200032;
+        // 糖果池-锦鲤抽奖
+        OPERATE_TYPE_ID_CANDY_POOL_LUCKY = 200040;
+        // 糖果池-领利息
+        OPERATE_TYPE_ID_CANDY_POOL_INTEREST = 200041;
+        // 领分红
+        OPERATE_TYPE_ID_DIVIDEND = 200048;
+        // 老时代召回
+        OPERATE_TYPE_ID_RECALL_OLD_USERS = 200056;
+        // 慈善拍卖 - 资金扣除
+        OPERATE_TYPE_ID_ACTIVITY_AUCTION_BAL_DEDUCT = 200057;
+        // GAT认购
+        OPERATE_TYPE_ID_ACTIVITY_GAT_SUBSCRIBE = 200058;
+        // ILO项目解锁
+        OPERATE_TYPE_ID_ILO_UNLOCK = 200059;
+        // 元旦现货活动 - 投注下单
+        OPERATE_TYPE_ID_YD_TASK_BET = 200074;
+        // 元旦金融活动 - 抽奖发放
+        OPERATE_TYPE_ID_YD_PRIZE_DRAW = 200075;
+        // 元旦现货活动 - 抽奖码中奖
+        OPERATE_TYPE_ID_YD_LOTTERY_CODE_DRAW = 200076;
+        // 元旦合約活动 - 排名奖励
+        OPERATE_TYPE_ID_YD_CONTRACT_RANK_REWARD = 200077;
+        // 新手礼包
+        OPERATE_TYPE_ID_NEW_USER_GIFT = 210034;
+        // 社区 - 活力中奖
+        OPERATE_TYPE_ID_WINNING_THE_PRIZE = 220033;
+        // 社区 - 超新星奖励
+        OPERATE_TYPE_ID_SNS_SUPER_START = 220035;
+        // 社区 - 超新星优质内容奖励
+        OPERATE_TYPE_ID_SNS_SUPER_START_CONTENT = 220036;
+        // 社区 - 热评榜奖励
+        OPERATE_TYPE_ID_SNS_HOT_COMMENT = 220037;
+        // 社区 - 热评榜优质内容奖励
+        OPERATE_TYPE_ID_SNS_HOT_COMMENT_CONTENT = 220038;
+        // 活期宝回款
+        OPERATE_TYPE_ID_STAKING = 311049;
+        // 活期宝转入
+        OPERATE_TYPE_ID_STAKING_INVESTMENT = 311051;
+        // 理财超市 - 定期宝回款
+        OPERATE_TYPE_ID_FINANCIAL = 313021;
+        // DEFI - 机枪池购买（下单）
+        OPERATE_TYPE_ID_DEFI_ORE_POOL_CREATE_ORDER = 313060;
+        // DEFI - 机枪池本金回款
+        OPERATE_TYPE_ID_DEFI_ORE_POOL_REPAY_MONEY = 313061;
+        // DEFI - 机枪池利息回款
+        OPERATE_TYPE_ID_DEFI_ORE_POOL_REPAY_INTEREST = 313062;
+        // DEFI - 机枪池保险金
+        OPERATE_TYPE_ID_DEFI_ORE_POOL_FEE_INSURANCE = 313063;
+        // DEFI - 流动性矿池锁仓（下单）
+        OPERATE_TYPE_ID_DEFI_ORE_FLOW_CREATE_ORDER = 313064;
+        // DEFI - 流动性矿池本金回款
+        OPERATE_TYPE_ID_DEFI_ORE_FLOW_REPAY_MONEY = 313065;
+        // DEFI - 流动性矿池利息回款
+        OPERATE_TYPE_ID_DEFI_ORE_FLOW_REPAY_INTEREST = 313066;
+        // DEFI - 流动性矿池保险金
+        OPERATE_TYPE_ID_DEFI_ORE_FLOW_FEE_INSURANCE = 313067;
+        // 抵押借币 - 借币
+        OPERATE_TYPE_ID_BORROW = 320009;
+        // 抵押借币 - 抵押
+        OPERATE_TYPE_ID_BORROW_MORT = 320010;
+        // 抵押借币 - 赎回
+        OPERATE_TYPE_ID_BORROW_REDEEM = 320011;
+        // 抵押借币 - 还币（本息）
+        OPERATE_TYPE_ID_BORROW_BACK = 320012;
+        // 抵押借币 - 添加抵押资产C
+        OPERATE_TYPE_ID_BORROW_ADD_MORT = 320013;
+        // 抵押借币 - 已平仓还回
+        OPERATE_TYPE_ID_BORROW_CLOSE_BACK = 320014;
+        // 抵押借币 - 平仓剩余
+        OPERATE_TYPE_ID_BORROW_CLOSE_SURPLUS = 320015;
+        // 抵押借币 - 借出，资金池
+        OPERATE_TYPE_ID_BORROW_POOL_BORROW = 320016;
+        // 抵押借币 - 收到抵押,资金池
+        OPERATE_TYPE_ID_BORROW_POOL_MORT = 320017;
+        // 抵押借币 - 还出，资金池
+        OPERATE_TYPE_ID_BORROW_POOL_BACK = 320018;
+        // 抵押借币 - 收到还币本息，资金池
+        OPERATE_TYPE_ID_BORROW_POOL_BACK2 = 320019;
+        // 抵押借币 - 收到增加保证金,资金池
+        OPERATE_TYPE_ID_BORROW_POOL_ADD_MORT = 320020;
+        // 抵押借币 - 抽取部分资金
+        OPERATE_TYPE_ID_BORROW_EXTRACT = 320055;
+        // 抵押借币 - 还利息（专业版按月还）
+        OPERATE_TYPE_ID_BORROW_PLAN_BACK = 322078;
+        // 抵押借币 - 还本息（专业版提前还）
+        OPERATE_TYPE_ID_BORROW_PREPAYMENT_BACK = 322079;
+        // 算力商城 - 算力收益
+        OPERATE_TYPE_ID_MINING_EARNINGS = 331039;
+        // 算力商城 - 算力购买
+        OPERATE_TYPE_ID_MINING_BUY = 331045;
+        // 撮合交易业务
+        // NOTE: 撮合交易调用资产中心接口时，传入该业务类型，而不是不传业务类型。资产中心会强制针对该业务类型不写财务记录。
+        OPERATE_TYPE_ID_FLAG_TRADE = 400001;
+        // 交易套餐购买日志包月
+        OPERATE_TYPE_ID_SETMEAL_MONTH = 400043;
+        // 交易套餐购买日志包年
+        OPERATE_TYPE_ID_SETMEAL_YEAR = 400044;
+        // AEXswap - 提供流动性
+        OPERATE_TYPE_ID_SWAP_ADD_MARKET = 420068;
+        // AEXswap - 退出流动性
+        OPERATE_TYPE_ID_SWAP_REMOVE_MARKET = 420069;
+        // AEXswap - 挖矿收益
+        OPERATE_TYPE_ID_SWAP_MINE_PROFIT = 420070;
+        // swap置换
+        OPERATE_TYPE_SWAP_EXCHANGE = 420071;
+        // ETH2
+        OPERATE_TYPE_SWAP_ETH2 = 420072;
+        // FIL12A置换
+        OPERATE_TYPE_SWAP_FIL12A = 420073;
+        // 合约内部划转
+        // NOTE: 合约内部划转 不记财务记录
+        OPERATE_TYPE_ID_FLAG_CONTRACT = 431001;
+        // 小资产兑换
+        OPERATE_TYPE_ID_SMALL_BALANCE_EXCHANGE = 440025;
+        // 币种翻新
+        OPERATE_TYPE_ID_TRANSFER = 442050;
+        // 从C2C转入
+        OPERATE_TYPE_ID_TRANSFORM_FROM_C2C = 450007;
+        // 转出到C2C
+        OPERATE_TYPE_ID_TRANSFORM_TO_C2C = 450008;
+        // OTC - 入账
+        OPERATE_TYPE_ID_OTC_ENTER = 450052;
+        // OTC - 放币
+        OPERATE_TYPE_ID_OTC_OUT = 450053;
+        // OTC - 挂单冻结划转
+        OPERATE_TYPE_ID_LOCK_OTC_TRANSFE = 450054;
+        // 管理后台批量入账-交易活动
+        OPERATE_TYPE_ID_TRADE_ACTIVITY_BATCH_ENTRY = 900042;
+        // 管理后台 - 空投
+        OPERATE_TYPE_ID_AIR_DROP = 900046;
+        // 管理后台 - 补发
+        OPERATE_TYPE_ID_REPLENISHMENT = 900047;
+    }
+
+    // 业务类型
+    Type operateType = 1;
+
+    // 业务类型名字
+    string operateTypeName = 2;
+
+    // 用户发起操作对应的 IP
+    string uip = 3;
+
+    // 用户发起操作的时间
+    int64 utime = 4;
+
+    // 原因
+    // 可不填
+    string reason = 5;
+
+    // 操作人
+    // 可不填
+    string nickname = 6;
+
+    // 业务操作流水号
+    // 一次流水号只会成功触发一次修改资金的操作
+    string logID = 7;
+}

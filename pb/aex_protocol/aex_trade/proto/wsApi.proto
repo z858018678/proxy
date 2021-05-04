@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+import "common.proto";
+
+package Trade;
+
+//请求
+message WsREQMessage {
+  EVEN Cmd = 1;
+  string action = 2; //sub unsub login logout
+  Login login = 3;
+  string Symbol = 4; //操作的交易对(gat_cnc | coin_market)
+}
+
+//响应
+message WsRESMessage {
+  EVEN Cmd = 1;
+  string Symbol = 2;
+  int32 Code = 3;
+  string Msg = 4;
+  DepthList DepthData = 5;
+  TickerData TickerData = 6;
+  FiveDepth FiveDepth = 7;
+  repeated TradeBasicInfo TradeData = 8;
+  KlineBasicInfo KlineData = 9;
+  TradeBasicInfoUser TradeDataUser = 10;
+  OrderInfoUser OrderDataUser = 11;
+  MiniTickerData  MiniTickerData = 12;
+}
+
+
+//登录
+message Login {
+  string Key = 1;
+  string UserId = 2;
+}
+

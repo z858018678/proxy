@@ -1,0 +1,197 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "querier.proto",
+    "version": "version not set"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/balance/assets/user/batch": {
+      "get": {
+        "summary": "查询:\n1. 多种资产类型\n2. 多种币\n资产数据",
+        "operationId": "UserBalanceQueryService_BatchUserAssets",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userBalanceBatchUserAssetsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "uid",
+            "description": "要查询的用户.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "coinCodes",
+            "description": "要查询的币种.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "types",
+            "description": "要查询的持币类型.\n\n - HoldingsTypeNone: 保留字段\n - SpotFree: 立即可用资产\n可用来交易的现货资产\n - SpotOrderFrozen: 挂单锁仓数量\n - SpotFinanceFrozen: 理财锁仓\n - OTCFrozen: otc广告冻结",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "HoldingsTypeNone",
+                "SpotFree",
+                "SpotOrderFrozen",
+                "SpotFinanceFrozen",
+                "OTCFrozen"
+              ]
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "isTotal",
+            "description": "如果有 coinCodes 参数，按 coinCodes 参数查询\n否则，当 isTotal = true 时，表示查询所有币种持币.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "UserBalanceQueryService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "CoinHoldingsHoldings": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/userBalanceHoldingsType",
+          "title": "持币类型"
+        },
+        "holdings": {
+          "type": "number",
+          "format": "double",
+          "title": "持币数量"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "userBalanceBatchUserAssetsResponse": {
+      "type": "object",
+      "properties": {
+        "statusCode": {
+          "$ref": "#/definitions/userBalanceBatchUserAssetsResponseCode"
+        },
+        "desc": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/userBalanceBatchUserAssetsResponseData"
+        }
+      }
+    },
+    "userBalanceBatchUserAssetsResponseCode": {
+      "type": "string",
+      "enum": [
+        "Fail",
+        "Success"
+      ],
+      "default": "Fail"
+    },
+    "userBalanceBatchUserAssetsResponseData": {
+      "type": "object",
+      "properties": {
+        "coinHoldings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/userBalanceCoinHoldings"
+          },
+          "title": "用户持币"
+        }
+      }
+    },
+    "userBalanceCoinHoldings": {
+      "type": "object",
+      "properties": {
+        "coinCode": {
+          "type": "string",
+          "title": "币"
+        },
+        "holdings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CoinHoldingsHoldings"
+          }
+        }
+      },
+      "title": "持币"
+    },
+    "userBalanceHoldingsType": {
+      "type": "string",
+      "enum": [
+        "HoldingsTypeNone",
+        "SpotFree",
+        "SpotOrderFrozen",
+        "SpotFinanceFrozen",
+        "OTCFrozen"
+      ],
+      "default": "HoldingsTypeNone",
+      "description": "- HoldingsTypeNone: 保留字段\n - SpotFree: 立即可用资产\n可用来交易的现货资产\n - SpotOrderFrozen: 挂单锁仓数量\n - SpotFinanceFrozen: 理财锁仓\n - OTCFrozen: otc广告冻结",
+      "title": "持币类型"
+    }
+  }
+}

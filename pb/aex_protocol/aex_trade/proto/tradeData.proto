@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+import "common.proto";
+
+package Trade;
+
+message TradeREQMessage {
+  EVEN Cmd = 1;
+  Symbol Symbol = 2;
+  DepthList DepthData = 3;
+  TickerData TickerData = 4;
+  FiveDepth FiveDepth = 5;
+  repeated TradeBasicInfo TradeData = 6;
+  repeated KlineBasicInfo KlineData = 7;
+  repeated TradeBasicInfoUser TradeDataUser = 8;
+  repeated OrderInfoUser OrderDataUser = 9;
+  string SecretKey = 10; //数据中心的约定
+}
+
+//交易对
+message Symbol {
+  string Coin = 1; //币名
+  string Market = 2; //市场
+}

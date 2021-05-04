@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package RegisterFound;
+
+message RegisterFoundREQMessage{
+  //路由：取值 gateway_register 或 worker_register
+  string Cmd = 1;
+  //BusinessWorker注册
+  BusinessWorkerRegisterData BWRData = 2;
+  //Gateway注册
+  GatewayRegisterData GRData = 3;
+  //Gateway BusinessWorker 公共心跳
+  HeartBeat HBDData = 4;
+  //后台接口，展示
+  AdminGatewayList BARData = 5;
+}
+
+message RegisterFoundRESMessage{
+  //响应消息标识
+  // connect  链接成功，建立连接时的响应
+  // register 注册成功，work注册成功时会立即推送一次网关地址
+  // broadcast_addresses 推送给work
+  string Cmd = 1;
+  // 1是成功   0是失败
+  int32 Code = 2;
+  string Msg = 3;
+  // 只有cmd=broadcast_addresses 时 BARData 才有数据
+  BroadcastAddressesResponseData BARData = 4;
+}
+
+
+//Gateway BusinessWorker 公共心跳
+message HeartBeat {
+  //和注册中心约定的key，当前全局都是空字符串
+  string SecretKey = 1;
+  // 客户端发 ping ，服务端回复 pong
+  string Data = 2;
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+//Gateway注册数据
+message GatewayRegisterData {
+  string SecretKey = 1;
+  // 业务类型，同组服务保持一致
+  string Business = 2;
+  // 网关连接地址
+  string Address = 3;
+  // 节点名称
+  string Name = 4;
+}
+
+//BusinessWorker注册数据
+message BusinessWorkerRegisterData {
+  string SecretKey = 1;
+  // 通过业务类型获得相应的所有网关地址，
+  string Business = 2;
+  string Name = 3;
+}
+
+message BroadcastAddressesResponseData {
+  // 网关注册的地址原文
+  repeated string AddressList = 1;
+}
+
+//后台获取gateway列表
+message AdminGatewayList {
+  string SecretKey = 1;
+  string Data = 2;
+}

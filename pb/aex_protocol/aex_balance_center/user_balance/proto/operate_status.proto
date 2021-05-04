@@ -1,0 +1,46 @@
+syntax = "proto3";
+package userBalance;
+option go_package = ".;userBalance";
+
+enum OperateStatus {
+    // 保留字段
+    OPERATE_STATUS_WITHDRAW_STATUS_NONE = 0;
+
+    // 提币
+    // 无效状态
+    OPERATE_STATUS_WITHDRAW_STATUS_NA = 1000;
+    // 提币请求超过限额需要审核
+    OPERATE_STATUS_WITHDRAW_STATUS_NEED_AUDIT = 1001;
+    // 提币请求不需要审核
+    OPERATE_STATUS_WITHDRAW_STATUS_NO_NEED_AUDIT = 1002;
+    // 提币请求审核已通过
+    OPERATE_STATUS_WITHDRAW_STATUS_AUDIT_PASSED = 1003;
+    // 提币请求审核未通过
+    OPERATE_STATUS_WITHDRAW_STATUS_ADIT_DENY = 1004;
+    // 币正在发送中
+    OPERATE_STATUS_WITHDRAW_STATUS_SENDING = 1005;
+    // 币发送成功
+    OPERATE_STATUS_WITHDRAW_STATUS_SENT_OK = 1006;
+    // 币发送失败
+    OPERATE_STATUS_WITHDRAW_STATUS_SENT_FAIL = 1007;
+    // 其他未定义情况
+    OPERATE_STATUS_WITHDRAW_STATUS_OTHER_FAIL = 1008;
+    // 提币审核延迟发送
+    OPERATE_STATUS_WITHDRAW_STATUS_DELAYED_SEND = 1009;
+    //虚拟币充值补单，确认中(前端显示处理中)
+    OPERATE_STATUS_VIRTUAL_COIN_RECHARGE_CONFIRMING = 1010;
+    //虚拟币充值已到账
+    OPERATE_STATUS_VIRTUAL_COIN_RECHARGE_OK = 1011;
+    //算力收益总账户充值订单无效（仅用于管理后台算力收益核对功能分发收益时将打收益的总账户的财务记录修改为无效状态，方便资管对账）
+    OPERATE_STATUS_CLOUD_BONUS_TOTAL_ACCOUNT_INVALID = 1012;
+
+    // 普通财务记录操作状态
+    //财务记录无效(对于所有财务记录通用，表名该财务记录失效)(前端显示已失效)
+    OPERATE_STATUS_INVALID = 2000;
+    //非充提类的财务记录操作已成功
+    OPERATE_STATUS_CREDITED = 2001;
+    // (管理后台批量入账)待审核状态(未在平台前端显示)
+    OPERATE_STATUS_BATCH_ENTRY_TO_CHECK = 2002;
+    // (管理后台批量入账)审核订单删除(未在平台前端显示)
+    OPERATE_STATUS_BATCH_ENTRY_CHECK_DELETE = 2003;
+}

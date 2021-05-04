@@ -1,0 +1,241 @@
+syntax = "proto3";
+package userBalance;
+option go_package = ".;userBalance";
+
+import "general.proto";
+import "google/api/annotations.proto";
+
+// 用户资产生产消息服务
+// 请求成功不代表执行成功
+// 请求会往消息队列中发布消息
+// 最终是否成功，还需要从响应队列中获取结果
+service UserBalanceProducerService {
+    // 增加用户持币
+    rpc IncreaseHoldings(ChangeHoldingsParams) returns (ChangeHoldingsResponse) {
+        option (google.api.http) = {
+            post: "/v1/balance/holdings/user/increase"
+            body: "*" 
+        };
+    };
+
+    // 扣除用户持币
+    rpc DecreaseHoldings(ChangeHoldingsParams) returns (ChangeHoldingsResponse) {
+        option (google.api.http) = {
+            post: "/v1/balance/holdings/user/decrease"
+            body: "*" 
+        };
+    };
+
+    // 扣除用户持币
+    // 允许将用户持币扣除为负数
+    rpc DecreaseHoldingsAdmin(ChangeHoldingsParams) returns (ChangeHoldingsResponse) {
+        option (google.api.http) = {
+            post: "/v1/balance/admin/holdings/user/decrease"
+            body: "*" 
+        };
+    };
+
+    // 资产移动
+    rpc MoveHoldings(MoveHoldingsParams) returns (MoveHoldingsResponse) {
+        option (google.api.http) = {
+            post: "/v1/balance/holdings/user/move"
+            body: "*" 
+        };
+    };
+
+    // 资产变动
+    rpc MultiChangeHoldings(MultiChangeHoldingsParams) returns (MultiChangeHoldingsResponse) {
+        option (google.api.http) = {
+            post: "/v1/balance/holdings/user/change/multi"
+            body: "*" 
+        };
+    };
+};
+
+message ChangeHoldingsParams {
+    // 用户 ID
+    // 此参数调用方不用管
+    // 用于 kafka 消息体中赋值
+    // 服务端使用
+    int64 uid = 1;
+
+    // 币
+    string coinCode = 2;
+
+    // 要更改的币数
+    // 数量大于零
+    // 增减数量靠接口控制
+    double change = 3;
+
+    // 要更改持币的类型
+    HoldingsType changeType = 4;
+
+    // 业务
+    AexBusiness business = 5;
+
+    // 需要回调的方法
+    Callback callback = 6;
+
+    // 此参数调用方不用管
+    // 用于 kafka 消息体中赋值
+    // 服务端使用
+    string requestID = 7;
+
+    // 是否回滚操作
+    bool isRollback = 8;
+}
+
+message ChangeHoldingsResponseData {
+    // producer 会生成一条唯一的 requestID
+    // 调用者通过此 requestID 附带的信息确认此次调用结果
+    string requestID = 1;
+    // 财务记录ID
+    // 钱包那边需要操作财务记录，返回这个ID给钱包那边去更新财务记录
+    int64 opID = 2;
+}
+
+message ChangeHoldingsResponse {
+    enum Code {
+        Fail = 0;
+        Success = 1;
+        // 没有数据用以 rollback
+        // 尝试 rollback 的时候，会先查询是否已有提交成功的数据
+        // 如果没有提交成功的数据，却尝试 rollback
+        // 则会返回该错误码
+        NoDataToRollback = 2;
+    }
+
+    Code statusCode = 1;
+    string desc = 2;
+    ChangeHoldingsResponseData data = 3;
+}
+
+message MoveHoldingsParams {
+    // 用户 ID
+    // 此参数调用方不用管
+    // 用于 kafka 消息体中赋值
+    // 服务端使用
+    int64 uid = 1;
+
+    // 币
+    string coinCode = 2;
+
+    // 移动持币数量
+    double move = 3;
+
+    // 从何种持币移动到何种持币
+    HoldingsType fromType = 4; 
+    HoldingsType toType = 5; 
+
+    // 业务
+    AexBusiness business = 6;
+
+    // 需要回调的方法
+    Callback callback = 7;
+
+    // 此参数调用方不用管
+    // 用于 kafka 消息体中赋值
+    // 服务端使用
+    string requestID = 8;
+
+    // 是否回滚操作
+    bool isRollback = 9;
+}
+
+message MoveHoldingsResponseData {
+    // producer 会生成一条唯一的 requestID
+    // 调用者通过此 requestID 附带的信息确认此次调用结果
+    string requestID = 1;
+}
+
+message MoveHoldingsResponse {
+    enum Code {
+        Fail = 0;
+        Success = 1;
+        // 没有数据用以 rollback
+        // 尝试 rollback 的时候，会先查询是否已有提交成功的数据
+        // 如果没有提交成功的数据，却尝试 rollback
+        // 则会返回该错误码
+        NoDataToRollback = 2;
+    }
+
+    Code statusCode = 1;
+    string desc = 2;
+    MoveHoldingsResponseData data = 3;
+}
+
+message MultiChangeHoldingsParams {
+
+    // 变更持币的数据
+    message Change {
+        // 持币变化方向
+        enum ChangeSide {
+            None = 0;
+            // 增
+            Inc = 1;
+            // 减
+            Dec = 2;
+        }
+
+        // 要更改持币的类型
+        HoldingsType type = 1;
+
+        // 要更改的币数
+        // 数量大于零
+        // 增减数量靠变化方向控制
+        double change = 2;
+
+        // 持币变化方向
+        ChangeSide side = 3;
+    }
+
+
+    // 用户 ID
+    // 此参数调用方不用管
+    // 用于 kafka 消息体中赋值
+    // 服务端使用
+    int64 uid = 1;
+
+    // 币
+    string coinCode = 2;
+
+    // 变更持币
+    repeated Change changes = 3;
+
+    // 业务
+    AexBusiness business = 4;
+
+    // 需要回调的方法
+    Callback callback = 5;
+
+    // 此参数调用方不用管
+    // 用于 kafka 消息体中赋值
+    // 服务端使用
+    string requestID = 6;
+
+    // 是否回滚操作
+    bool isRollback = 7;
+}
+
+message MultiChangeHoldingsResponseData {
+    // producer 会生成一条唯一的 requestID
+    // 调用者通过此 requestID 附带的信息确认此次调用结果
+    string requestID = 1;
+}
+
+message MultiChangeHoldingsResponse {
+    enum Code {
+        Fail = 0;
+        Success = 1;
+        // 没有数据用以 rollback
+        // 尝试 rollback 的时候，会先查询是否已有提交成功的数据
+        // 如果没有提交成功的数据，却尝试 rollback
+        // 则会返回该错误码
+        NoDataToRollback = 2;
+    }
+
+    Code statusCode = 1;
+    string desc = 2;
+    MultiChangeHoldingsResponseData data = 3;
+}
+

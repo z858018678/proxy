@@ -1,0 +1,23 @@
+[logger]
+    dir = ""
+    name = ""
+    level = "info"
+    debug = true
+    async = false
+
+[service.governor]
+    port = 60300
+
+[service.message_engine_registry]
+    address = "192.168.1.7:9509"
+
+[service.jaeger]
+    enableRPCMetrics = false
+
+[service.jaeger.sampler]
+    type = "const"
+    param = 0.001
+
+[service.ws_server]
+    port = 60100
+    host = "127.0.0.1"
